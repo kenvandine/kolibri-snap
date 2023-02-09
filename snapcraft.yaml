@@ -1,0 +1,79 @@
+name: kolibri
+adopt-info: kolibri-gnome
+base: core22
+architectures:
+- amd64
+confinement: strict
+grade: stable
+
+layout:
+  /usr/lib/x86_64-linux-gnu/webkit2gtk-4.0:
+    symlink: $SNAP/gnome-platform/usr/lib/x86_64-linux-gnu/webkit2gtk-4.0
+  /usr/share/kolibri-app:
+    bind: $SNAP/usr/share/kolibri-app
+
+package-repositories:
+  - type: apt
+    ppa: learningequality/kolibri
+
+apps:
+  kolibri:
+    extensions: [gnome]
+    daemon: simple
+    passthrough: #///! TODO: Remove once daemon-scope lands in snapcraft
+      daemon-scope: user
+    restart-condition: always
+    command: bin/snapcraft-preload $SNAP/usr/libexec/kolibri-app/kolibri-daemon
+    environment:
+      PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$PYTHONPATH
+    plugs:
+      - network
+      - audio-playback
+      - network-status
+
+  kolibri-gnome:
+    command: usr/bin/kolibri-gnome
+    common-id: org.learningequality.Kolibri
+    desktop: usr/share/applications/org.learningequality.Kolibri.desktop
+    extensions: [gnome]
+    environment:
+      PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$PYTHONPATH
+    plugs:
+      - network
+      - audio-playback
+      - network-status
+
+parts:
+  snapcraft-preload:
+    source: https://github.com/sergiusens/snapcraft-preload.git
+    plugin: cmake
+    cmake-parameters:
+      - -DCMAKE_INSTALL_PREFIX=/
+    build-packages:
+      - on amd64:
+        - gcc-multilib
+        - g++-multilib
+
+  kolibri-gnome:
+    source: https://github.com/learningequality/kolibri-installer-gnome.git
+    plugin: meson
+    meson-parameters:
+      - --prefix=/usr
+      - --buildtype=release
+    parse-info: [usr/share/metainfo/org.learningequality.Kolibri.metainfo.xml]
+    stage-packages:
+      - python3-setproctitle
+
+  kolibri:
+    plugin: nil
+    build-packages:
+      - dpkg-dev
+    stage-packages:
+      - kolibri
+      - python3-pkg-resources
+    prime:
+      - lib/systemd/system/kolibri.service
+      - usr/bin/kolibri
+      - usr/lib/python3/dist-packages
+      - usr/share/kolibri*
+      - -usr/lib/python3/dist-packages/kolibri/dist/cext/cp*
