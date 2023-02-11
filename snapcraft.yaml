@@ -16,6 +16,10 @@ package-repositories:
   - type: apt
     ppa: learningequality/kolibri
 
+environment:
+  PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$PYTHONPATH
+  KOLIBRI_HOME: $SNAP_USER_COMMON/.kolibri
+
 apps:
   kolibri:
     extensions: [gnome]
@@ -23,27 +27,31 @@ apps:
     passthrough: #///! TODO: Remove once daemon-scope lands in snapcraft
       daemon-scope: user
     restart-condition: always
-    command: bin/snapcraft-preload $SNAP/usr/libexec/kolibri-app/kolibri-daemon
-    environment:
-      PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$PYTHONPATH
+    command: kolibri.sh
     plugs:
       - network
       - audio-playback
       - network-status
+      - mount-observe
 
   kolibri-gnome:
     command: usr/bin/kolibri-gnome
     common-id: org.learningequality.Kolibri
     desktop: usr/share/applications/org.learningequality.Kolibri.desktop
     extensions: [gnome]
-    environment:
-      PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$PYTHONPATH
     plugs:
       - network
       - audio-playback
       - network-status
+      - mount-observe
 
 parts:
+  launcher:
+    plugin: dump
+    source: launcher
+    override-build: |
+      cp kolibri.sh $CRAFT_PART_INSTALL/
+
   snapcraft-preload:
     source: https://github.com/sergiusens/snapcraft-preload.git
     plugin: cmake
