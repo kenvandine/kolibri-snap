@@ -5,6 +5,9 @@ architectures:
 - amd64
 confinement: strict
 grade: stable
+icon: icon.png
+passthrough:
+  license: MIT
 
 layout:
   /usr/lib/x86_64-linux-gnu/webkit2gtk-4.0:
