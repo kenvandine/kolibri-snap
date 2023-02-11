@@ -5,9 +5,13 @@ architectures:
 - amd64
 confinement: strict
 grade: stable
+compression: lzo
 icon: icon.png
 passthrough:
   license: MIT
+contact: https://github.com/kenvandine/kolibri-snap/issues
+issues: https://github.com/kenvandine/kolibri-snap/issues
+website: https://learningequality.org/kolibri/
 
 layout:
   /usr/lib/x86_64-linux-gnu/webkit2gtk-4.0:
