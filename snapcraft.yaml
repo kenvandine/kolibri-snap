@@ -26,6 +26,15 @@ package-repositories:
 environment:
   PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$PYTHONPATH
   KOLIBRI_HOME: $SNAP_USER_COMMON/.kolibri
+  GST_PLUGIN_PATH: $SNAP/usr/lib/x86_64-linux-gnu/gstreamer-1.0
+  GST_PLUGIN_SYSTEM_PATH: $SNAP/usr/x86_64-linux-gnu/lib/gstreamer-1.0
+  GST_PLUGIN_SCANNER: $SNAP/usr/lib/x86_64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner
+
+plugs:
+  shmem:
+    interface: shared-memory
+    private: true
+
 
 apps:
   kolibri:
@@ -40,6 +49,7 @@ apps:
       - audio-playback
       - network-status
       - mount-observe
+      - shmem
 
   kolibri-gnome:
     command: usr/bin/kolibri-gnome
@@ -92,3 +102,10 @@ parts:
       - usr/lib/python3/dist-packages
       - usr/share/kolibri*
       - -usr/lib/python3/dist-packages/kolibri/dist/cext/cp*
+
+  libraries:
+    plugin: nil
+    stage-packages:
+      - gstreamer1.0-plugins-bad
+      - gstreamer1.0-plugins-good
+      - libgstreamer1.0-0
