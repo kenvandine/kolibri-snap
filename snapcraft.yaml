@@ -23,7 +23,6 @@ package-repositories:
   - type: apt
     ppa: learningequality/kolibri
 
-
 plugs:
   shmem:
     interface: shared-memory
@@ -79,7 +78,22 @@ parts:
         - gcc-multilib
         - g++-multilib
 
+  kolibri-desktop-auth-plugin:
+    after: [ kolibri ]
+    source: https://github.com/endlessm/kolibri-desktop-auth-plugin.git
+    plugin: python
+    stage:
+      - lib/python3.10/site-packages/kolibri*
+
+  kolibri-explore-plugin:
+    after: [ kolibri ]
+    source: https://github.com/endlessm/kolibri-explore-plugin.git
+    plugin: python
+    stage:
+      - lib/python3.10/site-packages/kolibri*
+
   kolibri-gnome:
+    after: [ kolibri ]
     source: https://github.com/learningequality/kolibri-installer-gnome.git
     plugin: meson
     meson-parameters:
