@@ -19,9 +19,12 @@ layout:
   /usr/share/kolibri-app:
     bind: $SNAP/usr/share/kolibri-app
 
-package-repositories:
-  - type: apt
-    ppa: learningequality/kolibri
+environment:
+  PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/usr/local/lib/python3.10/dist-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+  KOLIBRI_HOME: $SNAP_USER_COMMON/.kolibri
+  GST_PLUGIN_PATH: $SNAP/usr/lib/x86_64-linux-gnu/gstreamer-1.0
+  GST_PLUGIN_SYSTEM_PATH: $SNAP/usr/x86_64-linux-gnu/lib/gstreamer-1.0
+  GST_PLUGIN_SCANNER: $SNAP/usr/lib/x86_64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner
 
 plugs:
   shmem:
@@ -32,6 +35,8 @@ apps:
   kolibri:
     extensions: [gnome]
     daemon: simple
+    passthrough: #///! TODO: Remove once daemon-scope lands in snapcraft
+      daemon-scope: user
     restart-condition: always
     command: kolibri.sh
     plugs:
@@ -40,9 +45,6 @@ apps:
       - network-status
       - mount-observe
       - shmem
-    environment:
-      PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$PYTHONPATH
-      KOLIBRI_HOME: $SNAP_COMMON/.kolibri
 
   kolibri-gnome:
     command: usr/bin/kolibri-gnome
@@ -54,12 +56,6 @@ apps:
       - audio-playback
       - network-status
       - mount-observe
-    environment:
-      PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$PYTHONPATH
-      GST_PLUGIN_PATH: $SNAP/usr/lib/x86_64-linux-gnu/gstreamer-1.0
-      GST_PLUGIN_SYSTEM_PATH: $SNAP/usr/lib/x86_64-linux-gnu/gstreamer-1.0
-      GST_PLUGIN_SCANNER: $SNAP/usr/lib/x86_64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner
-      KOLIBRI_USE_SYSTEM_INSTANCE: 1
 
 parts:
   launcher:
@@ -82,15 +78,27 @@ parts:
     after: [ kolibri ]
     source: https://github.com/endlessm/kolibri-desktop-auth-plugin.git
     plugin: python
+    python-requirements: [ 'requirements.txt' ]
     stage:
-      - lib/python3.10/site-packages/kolibri*
+      - lib/python3.10/site-packages/kolibri_desktop_auth_plugin*
+      - -bin/activate*
+      - -bin/__pycache__
+    prime:
+      - lib/python3.10/site-packages/kolibri_desktop_auth_plugin*
+      - -bin/activate*
 
   kolibri-explore-plugin:
     after: [ kolibri ]
     source: https://github.com/endlessm/kolibri-explore-plugin.git
     plugin: python
+    python-requirements: [ 'requirements.txt' ]
     stage:
-      - lib/python3.10/site-packages/kolibri*
+      - lib/python3.10/site-packages/kolibri_explore_plugin*
+      - -bin/activate*
+      - -bin/__pycache__
+    prime:
+      - lib/python3.10/site-packages/kolibri_explore_plugin
+      - -bin/activate*
 
   kolibri-gnome:
     after: [ kolibri ]
@@ -102,20 +110,25 @@ parts:
     parse-info: [usr/share/metainfo/org.learningequality.Kolibri.metainfo.xml]
     stage-packages:
       - python3-setproctitle
+    organize:
+      usr/local/lib/python3.10/dist-packages/kolibri_gnome: lib/python3.10/site-packages/kolibri_gnome
+      usr/local/lib/python3.10/dist-packages/kolibri_gnome_launcher: lib/python3.10/site-packages/kolibri_gnome_launcher
+      usr/local/lib/python3.10/dist-packages/kolibri_daemon: lib/python3.10/site-packages/kolibri_daemon
+      usr/local/lib/python3.10/dist-packages/kolibri_app: lib/python3.10/site-packages/kolibri_app
 
   kolibri:
-    plugin: nil
-    build-packages:
-      - dpkg-dev
-    stage-packages:
-      - kolibri
-      - python3-pkg-resources
+    plugin: python
+    source: https://github.com/learningequality/kolibri.git
+    python-requirements: [ 'requirements.txt' ]
+    organize:
+      lib/python3.10/site-packages/magicbus: lib/python3.10/site-packages/kolibri/dist/magicbus
+    stage:
+      - -bin/activate*
     prime:
-      - lib/systemd/system/kolibri.service
-      - usr/bin/kolibri
-      - usr/lib/python3/dist-packages
+      - lib/python3.10/site-packages/*
       - usr/share/kolibri*
       - -usr/lib/python3/dist-packages/kolibri/dist/cext/cp*
+      - -bin/activate*
 
   libraries:
     plugin: nil
