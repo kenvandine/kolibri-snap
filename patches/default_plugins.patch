@@ -1,11 +1,10 @@
 diff --git a/kolibri/utils/build_config/default_plugins.py b/kolibri/utils/build_config/default_plugins.py
-index c2892a53e5..2520c9b061 100644
+index c2892a53e5..076b3f2f19 100644
 --- a/kolibri/utils/build_config/default_plugins.py
 +++ b/kolibri/utils/build_config/default_plugins.py
-@@ -13,4 +13,6 @@ DEFAULT_PLUGINS = [
+@@ -13,4 +13,5 @@ DEFAULT_PLUGINS = [
      "kolibri.plugins.slideshow_viewer",
      "kolibri.plugins.user_auth",
      "kolibri.plugins.user_profile",
-+    "kolibri.plugins.explore",
-+    "kolibri.plugins.desktop_auth",
++    "kolibri_plugin_explore",
  ]
