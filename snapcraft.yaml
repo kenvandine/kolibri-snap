@@ -1,5 +1,5 @@
 name: kolibri
-adopt-info: kolibri-gnome
+adopt-info: kolibri
 base: core22
 architectures:
 - amd64
@@ -136,6 +136,7 @@ parts:
     override-pull: |
       craftctl default
       patch -p1 < $CRAFT_PART_SRC/../../patches/src/0001-Allow-superuser-to-be-null-in-device-provision-API.patch
+      craftctl set version=$(git describe --tags --abbrev=10)
 
   patches:
     plugin: nil
