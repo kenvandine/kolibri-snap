@@ -178,3 +178,6 @@ parts:
       - gstreamer1.0-plugins-bad
       - gstreamer1.0-plugins-good
       - libgstreamer1.0-0
+    prime:
+      - usr/lib/*/gstreamer-1.0
+      - usr/lib/*/libgst*
