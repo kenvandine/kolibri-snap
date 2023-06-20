@@ -7,4 +7,5 @@ index c2892a53e5..076b3f2f19 100644
      "kolibri.plugins.user_auth",
      "kolibri.plugins.user_profile",
 +    "kolibri_plugin_explore",
++    "kolibri_desktop_auth_plugin",
  ]

@@ -19,8 +19,12 @@ layout:
   /usr/share/kolibri-app:
     bind: $SNAP/usr/share/kolibri-app
 
+package-repositories:
+  - type: apt
+    ppa: learningequality/kolibri-proposed
+
 environment:
-  PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/usr/local/lib/python3.10/dist-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
+  PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
   KOLIBRI_HOME: $SNAP_USER_COMMON/.kolibri
   GST_PLUGIN_PATH: $SNAP/usr/lib/x86_64-linux-gnu/gstreamer-1.0
   GST_PLUGIN_SYSTEM_PATH: $SNAP/usr/x86_64-linux-gnu/lib/gstreamer-1.0
@@ -89,7 +93,6 @@ parts:
     prime:
       - lib/python3.10/site-packages/kolibri_desktop_auth_plugin*
       - -bin/activate*
-      - -*
 
   kolibri-explore-plugin:
     after: [ kolibri ]
@@ -118,7 +121,7 @@ parts:
       rm apps-bundle.zip*
       mkdir -p $CRAFT_PRIME/lib/python3.10/site-packages/kolibri_explore_plugin/static/collections/
       cd $CRAFT_PRIME/lib/python3.10/site-packages/kolibri_explore_plugin/static/collections/
-      rm *00*.json*
+      rm *00*.json* || true
       wget https://github.com/endlessm/endless-key-collections/blob/main/json/artist-0001.json
       wget https://github.com/endlessm/endless-key-collections/blob/main/json/athlete-0001.json
       wget https://github.com/endlessm/endless-key-collections/blob/main/json/curious-0001.json
@@ -145,28 +148,19 @@ parts:
       usr/local/lib/python3.10/dist-packages/kolibri_app: lib/python3.10/site-packages/kolibri_app
 
   kolibri:
-    after: [ patches ]
-    plugin: python
-    source: https://github.com/learningequality/kolibri.git
-    source-tag: v0.16.0-alpha14
-    python-requirements: [ 'requirements.txt' ]
-    organize:
-      lib/python3.10/site-packages/magicbus: lib/python3.10/site-packages/kolibri/dist/magicbus
-    build-environment:
-      - KOLIBRI_MODULE_PATH: lib/python3.10/site-packages/kolibri
-    stage:
-      - -bin/activate*
+    plugin: nil
+    build-packages:
+      - dpkg-dev
+    stage-packages:
+      - kolibri
+      - python3-pkg-resources
     prime:
-      - lib/python3.10/site-packages
-      - usr/share/kolibri*
-      - bin/kolibri
+      #- lib/systemd/system/kolibri.service
+      #- usr/bin/kolibri
+      #- usr/lib/python3/dist-packages
+      #- usr/share/kolibri*
       - -usr/lib/python3/dist-packages/kolibri/dist/cext/cp*
-      - -bin/activate*
-    override-pull: |
-      craftctl default
-      patch -p1 < $CRAFT_PART_SRC/../../patches/src/0001-Allow-superuser-to-be-null-in-device-provision-API.patch
-      patch -p1 < $CRAFT_PART_SRC/../../patches/src/default_plugins.patch
-      #craftctl set version=$(git describe --tags --abbrev=10)
+
 
   patches:
     plugin: nil
