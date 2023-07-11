@@ -19,17 +19,15 @@ layout:
   /usr/share/kolibri-app:
     bind: $SNAP/usr/share/kolibri-app
 
-package-repositories:
-  - type: apt
-    ppa: learningequality/kolibri-proposed
-
 environment:
-  PYTHONPATH: $SNAP/lib/python3.10/site-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
-  KOLIBRI_HOME: $SNAP_USER_COMMON/.kolibri
+  PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$SNAP/lib/python3.10/site-packages:$SNAP/gnome-platform/usr/lib/python3/dist-packages:$PYTHONPATH
   GST_PLUGIN_PATH: $SNAP/usr/lib/x86_64-linux-gnu/gstreamer-1.0
   GST_PLUGIN_SYSTEM_PATH: $SNAP/usr/x86_64-linux-gnu/lib/gstreamer-1.0
   GST_PLUGIN_SCANNER: $SNAP/usr/lib/x86_64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner
   KOLIBRI_DEBUG: 1
+  KOLIBRI_HOME: $SNAP_USER_COMMON/.kolibri
+  KOLIBRI_COMMAND: kolibri
+  DJANGO_SETTINGS_MODULE: kolibri.deployment.default.settings.base
 
 plugs:
   shmem:
@@ -85,13 +83,15 @@ parts:
     plugin: python
     python-requirements: [ 'requirements.txt' ]
     build-environment:
-      - KOLIBRI_MODULE_PATH: lib/python3.10/site-packages/kolibri
+      - KOLIBRI_MODULE_PATH: usr/lib/python3/dist-packages/kolibri
+    override-build: |
+      python3 setup.py install --force --prefix=/usr --root=$CRAFT_PART_INSTALL --no-compile -O0 --install-layout=deb
     stage:
-      - lib/python3.10/site-packages/kolibri_desktop_auth_plugin*
+      - usr/lib/python3/dist-packages/kolibri_desktop_auth_plugin*
       - -bin/activate*
       - -bin/__pycache__
     prime:
-      - lib/python3.10/site-packages/kolibri_desktop_auth_plugin*
+      - usr/lib/python3/dist-packages/kolibri_desktop_auth_plugin*
       - -bin/activate*
 
   kolibri-explore-plugin:
@@ -100,27 +100,29 @@ parts:
     plugin: python
     python-requirements: [ 'requirements.txt' ]
     build-environment:
-      - KOLIBRI_MODULE_PATH: lib/python3.10/site-packages/kolibri
+      - KOLIBRI_MODULE_PATH: usr/lib/python3/dist-packages/kolibri
     build-packages:
       - wget
       - unzip
     stage:
-      - lib/python3.10/site-packages/kolibri_explore_plugin*
+      - usr/lib/python3/dist-packages/kolibri_explore_plugin*
       - -bin/activate*
       - -bin/__pycache__
     prime:
-      - lib/python3.10/site-packages/kolibri_explore_plugin*
+      - usr/lib/python3/dist-packages/kolibri_explore_plugin*
       - -bin/activate*
+    override-build: |
+      python3 setup.py install --force --prefix=/usr --root=$CRAFT_PART_INSTALL --no-compile -O0 --install-layout=deb
     override-prime: |
       craftctl default
-      mkdir -p $CRAFT_PRIME/lib/python3.10/site-packages/kolibri_explore_plugin
-      cd $CRAFT_PRIME/lib/python3.10/site-packages/kolibri_explore_plugin
+      mkdir -p $CRAFT_PRIME/usr/lib/python3/dist-packages/kolibri_explore_plugin
+      cd $CRAFT_PRIME/usr/lib/python3/dist-packages/kolibri_explore_plugin
       wget https://github.com/endlessm/kolibri-explore-plugin/releases/download/v6.1.0/apps-bundle.zip
       rm -rf apps
       unzip apps-bundle.zip
       rm apps-bundle.zip*
-      mkdir -p $CRAFT_PRIME/lib/python3.10/site-packages/kolibri_explore_plugin/static/collections/
-      cd $CRAFT_PRIME/lib/python3.10/site-packages/kolibri_explore_plugin/static/collections/
+      mkdir -p $CRAFT_PRIME/usr/lib/python3/dist-packages/kolibri_explore_plugin/static/collections/
+      cd $CRAFT_PRIME/usr/lib/python3/dist-packages/kolibri_explore_plugin/static/collections/
       rm *00*.json* || true
       wget https://github.com/endlessm/endless-key-collections/blob/main/json/artist-0001.json
       wget https://github.com/endlessm/endless-key-collections/blob/main/json/athlete-0001.json
@@ -140,27 +142,44 @@ parts:
     stage-packages:
       - python3-setproctitle
     build-environment:
-      - KOLIBRI_MODULE_PATH: lib/python3.10/site-packages/kolibri
-    organize:
-      usr/local/lib/python3.10/dist-packages/kolibri_gnome: lib/python3.10/site-packages/kolibri_gnome
-      usr/local/lib/python3.10/dist-packages/kolibri_gnome_launcher: lib/python3.10/site-packages/kolibri_gnome_launcher
-      usr/local/lib/python3.10/dist-packages/kolibri_daemon: lib/python3.10/site-packages/kolibri_daemon
-      usr/local/lib/python3.10/dist-packages/kolibri_app: lib/python3.10/site-packages/kolibri_app
+     - KOLIBRI_MODULE_PATH: usr/lib/python3/dist-packages/kolibri
+    #organize:
+    #  usr/local/lib/python3.10/dist-packages/kolibri_gnome: lib/python3.10/site-packages/kolibri_gnome
+    #  usr/local/lib/python3.10/dist-packages/kolibri_gnome_launcher: lib/python3.10/site-packages/kolibri_gnome_launcher
+    #  usr/local/lib/python3.10/dist-packages/kolibri_daemon: lib/python3.10/site-packages/kolibri_daemon
+    #  usr/local/lib/python3.10/dist-packages/kolibri_app: lib/python3.10/site-packages/kolibri_app
 
   kolibri:
-    plugin: nil
-    build-packages:
-      - dpkg-dev
-    stage-packages:
-      - kolibri
-      - python3-pkg-resources
+    after: [ patches ]
+    plugin: python
+    #source: https://github.com/learningequality/kolibri/archive/refs/tags/v0.16.0-alpha17.tar.gz
+    source: https://github.com/learningequality/kolibri/releases/download/v0.16.0-alpha17/kolibri-0.16.0a17.tar.gz
+    #source: https://github.com/learningequality/kolibri.git
+    #source-tag: v0.16.0-alpha17
+    #python-requirements: [ 'requirements.txt' ]
+    #build-environment:
+    #  - KOLIBRI_MODULE_PATH: usr/lib/python3/dist-packages/kolibri
     prime:
+      #- -lib/python3.10/site-packages/kolibri*
+      - usr/share/kolibri*
+      - bin/kolibri
       #- lib/systemd/system/kolibri.service
-      #- usr/bin/kolibri
-      #- usr/lib/python3/dist-packages
-      #- usr/share/kolibri*
+      - usr/lib/python3/dist-packages
+      - usr/share/kolibri*
       - -usr/lib/python3/dist-packages/kolibri/dist/cext/cp*
+    #override-pull: |
+    #  craftctl default
+    #  patch -p1 < $CRAFT_PART_SRC/../../patches/src/0001-Allow-superuser-to-be-null-in-device-provision-API.patch
+    #  #patch -p1 < $CRAFT_PART_SRC/../../patches/src/default_plugins.patch
+    #  #craftctl set version=$(git describe --tags --abbrev=10)
+    #override-build: |
+    #  python3 setup.py install --force --prefix=/usr --root=$CRAFT_PART_INSTALL --no-compile -O0 --install-layout=deb
+    #  sed -i 's|/snap/gnome-42-2204-sdk/current||g' $CRAFT_PART_INSTALL/usr/bin/kolibri
+    #  pip install --target=$CRAFT_PART_INSTALL/usr/lib/python3/dist-packages magicbus
 
+    #override-prime: |
+    #  craftctl default
+    #  find $CRAFT_PRIME/lib/python3.10/site-packages/kolibri/ -type f,l -name *.pyc -exec rm -f "{}" \;
 
   patches:
     plugin: nil
